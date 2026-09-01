@@ -1,0 +1,51 @@
+<%- include('partials/head') %>
+<div class="app-shell">
+  <%- include('partials/sidebar') %>
+  <div class="app-main">
+    <%- include('partials/topbar') %>
+    <main class="app-content">
+      <section class="stat-grid" id="statGrid">
+        <article class="stat-card"><span>Total QR</span><strong id="statTotalQr">—</strong></article>
+        <article class="stat-card"><span>Active</span><strong id="statActive">—</strong></article>
+        <article class="stat-card"><span>Disabled</span><strong id="statDisabled">—</strong></article>
+        <article class="stat-card"><span>Today's scans</span><strong id="statToday">—</strong></article>
+        <article class="stat-card"><span>Monthly scans</span><strong id="statMonth">—</strong></article>
+        <article class="stat-card"><span>Total scans</span><strong id="statScans">—</strong></article>
+      </section>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="panel">
+            <div class="panel-head"><h2>Daily scans</h2></div>
+            <canvas id="dailyChart" height="120"></canvas>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="panel">
+            <div class="panel-head"><h2>Monthly scans</h2></div>
+            <canvas id="monthlyChart" height="240"></canvas>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="panel">
+            <div class="panel-head"><h2>Top 10 QR</h2></div>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead><tr><th>Code</th><th>Title</th><th>Scans</th></tr></thead>
+                <tbody id="topTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="panel">
+            <div class="panel-head"><h2>Recent activity</h2></div>
+            <ul class="activity" id="activityList"></ul>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<%- include('partials/footer', { scripts: '<script src="/public/js/dashboard.js"></script>' }) %>

@@ -1,0 +1,3 @@
+title,code,redirect_url,description,status
+Google QR,abc1,https://google.com,Example Google destination,ACTIVE
+YouTube QR,yt1,https://youtube.com,Example YouTube destination,ACTIVE

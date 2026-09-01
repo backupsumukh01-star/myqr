@@ -1,0 +1,23 @@
+<aside class="app-sidebar">
+  <div class="brand">
+    <% if (settings && settings.logo_path) { %>
+      <img src="<%= settings.logo_path %>" alt="Logo" class="brand-logo">
+    <% } else { %>
+      <span class="brand-mark">QR</span>
+    <% } %>
+    <div>
+      <strong><%= settings.site_name %></strong>
+      <small>Dynamic codes</small>
+    </div>
+  </div>
+  <nav class="side-nav">
+    <a class="<%= page === 'dashboard' ? 'active' : '' %>" href="/dashboard"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+    <a class="<%= page === 'qr' ? 'active' : '' %>" href="/qr-codes"><i class="bi bi-qr-code"></i> QR Codes</a>
+    <a class="<%= page === 'logs' ? 'active' : '' %>" href="/logs"><i class="bi bi-activity"></i> Scan logs</a>
+    <a class="<%= page === 'settings' ? 'active' : '' %>" href="/settings"><i class="bi bi-sliders"></i> Settings</a>
+    <a href="/docs" target="_blank" rel="noopener"><i class="bi bi-journal-code"></i> API docs</a>
+  </nav>
+  <button class="theme-toggle" id="themeToggle" type="button">
+    <i class="bi bi-moon-stars"></i> Dark mode
+  </button>
+</aside>

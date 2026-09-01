@@ -1,0 +1,13 @@
+<%- include('partials/head') %>
+<div class="public-status">
+  <div class="status-card">
+    <p>Opening…</p>
+    <p class="text-break"><a href="<%= destination %>"><%= destination %></a></p>
+  </div>
+</div>
+<meta http-equiv="refresh" content="0;url=<%= destination %>">
+<script>
+  window.location.replace(<%- JSON.stringify(destination) %>);
+</script>
+</body>
+</html>

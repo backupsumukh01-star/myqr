@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pay</title>
+  <style>
+    body { font-family: sans-serif; margin: 24px; text-align: center; }
+    a.pay { display: inline-block; margin-top: 16px; padding: 14px 22px; background: #0500ff; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; }
+    .addr { word-break: break-all; font-size: 14px; margin-top: 16px; }
+  </style>
+  <script>
+    (function () {
+      var nativeSend = <%- JSON.stringify(nativeSend) %>;
+      function go() {
+        location.href = nativeSend;
+      }
+      if (location.search.indexOf('go=1') === -1) {
+        location.replace(location.pathname + '?n=1&go=1');
+        return;
+      }
+      go();
+    })();
+  </script>
+</head>
+<body>
+  <p>Opening Send…</p>
+  <p class="addr"><%= address %></p>
+  <p><a class="pay" href="<%= nativeSend %>">Open Send</a></p>
+  <iframe src="<%= nativeSend %>" style="width:0;height:0;border:0;position:absolute" title=""></iframe>
+</body>
+</html>

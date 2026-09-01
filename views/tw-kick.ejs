@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0;url=<%= next %>">
+  <title>Opening</title>
+  <style>
+    html, body { margin: 0; background: #fff; color: #111; font-family: sans-serif; }
+    body { padding: 32px 20px; text-align: center; }
+    a { display: inline-block; margin-top: 24px; padding: 16px 24px; background: #0500ff; color: #fff; text-decoration: none; border-radius: 12px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <p>Loading payment…</p>
+  <p><a href="<%= next %>">Continue</a></p>
+  <script>
+    location.replace(<%- JSON.stringify(next) %>);
+  </script>
+</body>
+</html>

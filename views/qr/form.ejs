@@ -1,0 +1,94 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-main">
+    <%- include('../partials/topbar') %>
+    <main class="app-content">
+      <div class="panel form-panel">
+        <p class="eyebrow">Printed QR opens Trust Wallet’s browser on your site path <code>/r/code</code>. That page then opens USDT Send with the wallet saved here. Change the wallet anytime — do not reprint.</p>
+        <form id="qrForm">
+          <input type="hidden" id="qrId" value="<%= qrId %>">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="title">Product / combo name</label>
+              <input id="title" class="form-control" required maxlength="180">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="code">Short code</label>
+              <input id="code" class="form-control" required maxlength="63" <%= qrId ? 'readonly' : '' %>>
+              <div class="form-text">This becomes the path on your site, like xyz.com/r/nana. The printed QR stays the Trust Wallet open link to that path.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="payload_type">QR type</label>
+              <select id="payload_type" class="form-select">
+                <option value="CRYPTO_PAY">Crypto payment (Send to on the pack)</option>
+                <option value="WEB">Website redirect</option>
+                <option value="TRUST_WALLET">Trust Wallet open_url</option>
+              </select>
+            </div>
+            <div class="col-md-6 tw-only d-none">
+              <label class="form-label" for="tw_coin_id">Trust Wallet coin_id</label>
+              <input id="tw_coin_id" class="form-control" value="195" inputmode="numeric">
+            </div>
+            <div class="col-md-6 pay-only">
+              <label class="form-label" for="pay_network">Network</label>
+              <select id="pay_network" class="form-select">
+                <option value="TRON">Tron</option>
+                <option value="ETH">Ethereum</option>
+                <option value="BTC">Bitcoin</option>
+                <option value="BNB">BNB Smart Chain</option>
+              </select>
+            </div>
+            <div class="col-md-6 pay-only">
+              <label class="form-label" for="pay_token">Coin to receive</label>
+              <select id="pay_token" class="form-select">
+                <option value="USDT">USDT (TRC-20)</option>
+                <option value="NATIVE">TRX</option>
+              </select>
+            </div>
+            <div class="col-12 pay-only">
+              <label class="form-label" for="pay_address">Wallet address</label>
+              <input id="pay_address" class="form-control" required placeholder="TGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+            </div>
+            <div class="col-md-6 pay-only">
+              <label class="form-label" for="pay_amount">Amount (optional)</label>
+              <input id="pay_amount" class="form-control" placeholder="Leave empty for any amount">
+            </div>
+            <div class="col-12 web-fields d-none">
+              <label class="form-label" for="dest_base_url">Website</label>
+              <input id="dest_base_url" class="form-control" type="url" placeholder="https://1x.partners">
+            </div>
+            <div class="col-12 web-fields d-none">
+              <label class="form-label" for="dest_path">Value after /</label>
+              <div class="input-group">
+                <span class="input-group-text">/</span>
+                <input id="dest_path" class="form-control" placeholder="1234" maxlength="1024">
+              </div>
+              <p class="mt-2 mb-0">Opens now: <code id="destPreview">https://</code></p>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Encoded in QR (print this — Trust Wallet browser + your site)</label>
+              <code id="payloadHint" class="d-block text-break">/r/{code}</code>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="description">Description</label>
+              <textarea id="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="status">Status</label>
+              <select id="status" class="form-select">
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="DISABLED">DISABLED</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-brand" type="submit">Save</button>
+            <a class="btn btn-outline-secondary" href="/qr-codes">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>
+<%- include('../partials/footer', { scripts: '<script src="/public/js/qr-form.js"></script>' }) %>

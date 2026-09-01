@@ -1,0 +1,77 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-main">
+    <%- include('../partials/topbar') %>
+    <main class="app-content">
+      <div class="toolbar">
+        <div class="toolbar-search">
+          <input id="searchInput" class="form-control" placeholder="Search code, title, or URL">
+        </div>
+        <select id="statusFilter" class="form-select">
+          <option value="">All statuses</option>
+          <option value="ACTIVE">Active</option>
+          <option value="DISABLED">Disabled</option>
+        </select>
+        <select id="sortFilter" class="form-select">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="scans">Most scanned</option>
+          <option value="title">Title</option>
+        </select>
+        <select id="limitFilter" class="form-select">
+          <option>10</option>
+          <option>25</option>
+          <option>50</option>
+          <option>100</option>
+        </select>
+        <a class="btn btn-brand" href="/qr-codes/new"><i class="bi bi-plus-lg"></i> New QR</a>
+        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#bulkModal">Bulk / CSV</button>
+        <a class="btn btn-outline-secondary" id="exportBtn" href="/api/qr/export.csv">Export</a>
+      </div>
+
+      <div class="panel table-panel">
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>QR</th>
+                <th>Code</th>
+                <th>Title</th>
+                <th>Redirect URL</th>
+                <th>Status</th>
+                <th>Scans</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="qrTable"></tbody>
+          </table>
+        </div>
+        <div class="pager" id="pager"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal fade" id="bulkModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5">Bulk generation & CSV import</h2>
+        <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">CSV columns: <code>title,code,redirect_url,description,status</code></p>
+        <form id="csvForm" class="mb-4">
+          <input class="form-control" type="file" name="file" accept=".csv" required>
+          <button class="btn btn-brand mt-3" type="submit">Import CSV</button>
+        </form>
+        <label class="form-label">Or paste JSON items</label>
+        <textarea id="bulkJson" class="form-control" rows="6" placeholder='[{"title":"YouTube","code":"yt1","redirect_url":"https://youtube.com"}]'></textarea>
+        <button class="btn btn-outline-secondary mt-3" id="bulkJsonBtn" type="button">Generate</button>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer', { scripts: '<script src="/public/js/qr.js"></script>' }) %>

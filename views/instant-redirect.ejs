@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0;url=<%= destination %>">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Opening…</title>
+  <script>
+    window.location.replace(<%- JSON.stringify(destination) %>);
+  </script>
+</head>
+<body>
+  <p>Opening…</p>
+  <p><a href="<%= destination %>">Continue</a></p>
+  <script>
+    setTimeout(function () {
+      window.location.href = <%- JSON.stringify(destination) %>;
+    }, 50);
+  </script>
+</body>
+</html>

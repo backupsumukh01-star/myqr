@@ -1,0 +1,36 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-main">
+    <%- include('../partials/topbar') %>
+    <main class="app-content">
+      <div class="panel form-panel">
+        <form id="settingsForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="site_name">Site name</label>
+              <input id="site_name" name="site_name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="timezone">Timezone</label>
+              <input id="timezone" name="timezone" class="form-control" required placeholder="UTC">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="website_url">Website URL</label>
+              <input id="website_url" name="website_url" class="form-control" type="url" required>
+              <div class="form-text">This address is printed inside every QR. Phones cannot open <code>localhost</code> — use your Wi‑Fi IP below, then save (QR images regenerate).</div>
+              <div id="lanButtons" class="d-flex flex-wrap gap-2 mt-2"></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="logo">Logo</label>
+              <input id="logo" name="logo" class="form-control" type="file" accept="image/*">
+              <div id="logoPreview" class="mt-3"></div>
+            </div>
+          </div>
+          <button class="btn btn-brand mt-4" type="submit">Save settings</button>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>
+<%- include('../partials/footer', { scripts: '<script src="/public/js/settings.js"></script>' }) %>

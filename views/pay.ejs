@@ -1,0 +1,18 @@
+<%- include('partials/head') %>
+<link rel="stylesheet" href="/public/css/pay.css">
+<div class="pay-shell">
+  <div class="pay-card">
+    <p class="pay-kicker"><%= settings.site_name %></p>
+    <h1><%= qr.title %></h1>
+    <p class="pay-net"><%= networkLabel %></p>
+    <% if (qr.pay_amount) { %>
+      <p class="pay-amount">Amount: <%= qr.pay_amount %></p>
+    <% } %>
+    <p class="pay-note">Address: <%= qr.pay_address %></p>
+    <div class="pay-actions">
+      <a class="btn btn-brand" href="<%= sendLink %>">Pay in Trust Wallet</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

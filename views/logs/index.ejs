@@ -1,0 +1,38 @@
+<%- include('../partials/head') %>
+<div class="app-shell">
+  <%- include('../partials/sidebar') %>
+  <div class="app-main">
+    <%- include('../partials/topbar') %>
+    <main class="app-content">
+      <div class="toolbar">
+        <input id="searchInput" class="form-control" placeholder="Search QR, IP, country, browser">
+        <select id="limitFilter" class="form-select">
+          <option>10</option>
+          <option selected>25</option>
+          <option>50</option>
+          <option>100</option>
+        </select>
+      </div>
+      <div class="panel table-panel">
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>QR</th>
+                <th>IP</th>
+                <th>Country</th>
+                <th>Browser</th>
+                <th>Platform</th>
+                <th>Referer</th>
+              </tr>
+            </thead>
+            <tbody id="logTable"></tbody>
+          </table>
+        </div>
+        <div class="pager" id="pager"></div>
+      </div>
+    </main>
+  </div>
+</div>
+<%- include('../partials/footer', { scripts: '<script src="/public/js/logs.js"></script>' }) %>
