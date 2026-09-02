@@ -8,6 +8,11 @@ const { normalizeCode } = require('../helpers/strings');
 const { buildSendLink, buildNativeSendLink, isTrustInAppBrowser } = require('../helpers/payment');
 const logger = require('../utils/logger');
 
+function nextScanPath(code) {
+  const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  return `/r/${encodeURIComponent(code)}/s/${stamp}`;
+}
+
 async function logScan(req, qr) {
   const ip = clientIp(req);
   const geo = geoService.lookup(ip);
@@ -40,30 +45,41 @@ function noCache(res) {
   res.removeHeader('Content-Security-Policy-Report-Only');
 }
 
-async function redirect(req, res, next) {
+async function loadQr(req, res) {
+  const code = normalizeCode(req.params.code);
+  const qr = await QrCode.findByCode(code);
+  if (!qr) {
+    res.status(404).render('errors/404', { title: 'QR not found', code });
+    return null;
+  }
+  if (qr.status !== 'ACTIVE') {
+    res.status(410).render('errors/disabled', { title: 'QR disabled', qr });
+    return null;
+  }
+  return qr;
+}
+
+async function entry(req, res, next) {
   try {
-    const code = normalizeCode(req.params.code);
-    const qr = await QrCode.findByCode(code);
+    const qr = await loadQr(req, res);
+    if (!qr) return;
+    await logScan(req, qr);
+    noCache(res);
+    const nextUrl = nextScanPath(qr.code);
+    res.set('Refresh', `0;url=${nextUrl}`);
+    return res.status(200).render('tw-kick', {
+      title: 'Opening',
+      next: nextUrl
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
-    if (!qr) {
-      return res.status(404).render('errors/404', {
-        title: 'QR not found',
-        code
-      });
-    }
-
-    if (qr.status !== 'ACTIVE') {
-      return res.status(410).render('errors/disabled', {
-        title: 'QR disabled',
-        qr
-      });
-    }
-
-    const warmed = String(req.query.ok || '') === '1';
-    if (!warmed) {
-      await logScan(req, qr);
-    }
-
+async function serveScan(req, res, next) {
+  try {
+    const qr = await loadQr(req, res);
+    if (!qr) return;
     noCache(res);
 
     if (qr.payload_type === 'CRYPTO_PAY' && qr.pay_address) {
@@ -76,23 +92,14 @@ async function redirect(req, res, next) {
       };
       const sendLink = buildSendLink(sendOpts);
       const nativeSend = buildNativeSendLink(sendOpts);
-      const inTrust = isTrustInAppBrowser(req.headers['user-agent']);
 
-      if (inTrust && !warmed) {
-        const nextUrl = `/r/${encodeURIComponent(code)}?ok=1&t=${Date.now()}`;
-        res.set('Refresh', `0;url=${nextUrl}`);
-        return res.status(200).render('tw-kick', {
-          title: 'Opening',
-          next: nextUrl
-        });
-      }
-
-      if (inTrust) {
+      if (isTrustInAppBrowser(req.headers['user-agent'])) {
         return res.status(200).render('tw-pay', {
           title: 'Pay',
           qr,
           sendLink,
           nativeSend,
+          nextScan: nextScanPath(qr.code),
           networkLabel: qr.pay_token === 'NATIVE' ? 'TRX' : 'USDT (TRC-20)'
         });
       }
@@ -106,4 +113,4 @@ async function redirect(req, res, next) {
   }
 }
 
-module.exports = { redirect };
+module.exports = { entry, serveScan, nextScanPath };

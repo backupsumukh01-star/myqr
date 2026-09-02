@@ -30,10 +30,9 @@
   <p class="addr"><%= qr.pay_address %></p>
   <a class="pay" id="payBtn" href="<%= nativeSend %>">Pay USDT</a>
   <script>
+    var nextScan = <%- JSON.stringify(nextScan) %>;
     window.addEventListener('pageshow', function (ev) {
-      if (ev.persisted) {
-        location.replace(location.pathname + '?ok=1&t=' + Date.now());
-      }
+      if (ev.persisted) location.replace(nextScan);
     });
     var hiddenAt = 0;
     document.addEventListener('visibilitychange', function () {
@@ -41,9 +40,7 @@
         hiddenAt = Date.now();
         return;
       }
-      if (hiddenAt && Date.now() - hiddenAt > 2000) {
-        location.replace(location.pathname + '?ok=1&t=' + Date.now());
-      }
+      if (hiddenAt && Date.now() - hiddenAt > 2000) location.replace(nextScan);
     });
     setTimeout(function () {
       window.location.href = <%- JSON.stringify(nativeSend) %>;
