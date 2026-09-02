@@ -22,37 +22,53 @@ function filePaths(code) {
  * CRYPTO_PAY encodes official Trust Wallet send:
  * https://link.trustwallet.com/send?asset=c195_tTR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&address=...
  */
-async function generateQrFiles(websiteUrl, code, options = {}) {
-  await ensureDir();
-  const payload = buildQrPayload({
+async function qrPayload(websiteUrl, code, options = {}) {
+  return buildQrPayload({
     websiteUrl,
     code,
-    payloadType: options.payloadType || 'WEB',
-    twCoinId: options.twCoinId,
-    payAddress: options.payAddress,
-    payNetwork: options.payNetwork,
-    payAmount: options.payAmount,
-    payToken: options.payToken
+    payloadType: options.payloadType || options.payload_type || 'WEB',
+    twCoinId: options.twCoinId || options.tw_coin_id,
+    payAddress: options.payAddress || options.pay_address,
+    payNetwork: options.payNetwork || options.pay_network,
+    payAmount: options.payAmount || options.pay_amount,
+    payToken: options.payToken || options.pay_token
   });
-  const files = filePaths(code);
+}
 
-  await QRCode.toFile(files.png, payload, {
+async function renderPng(websiteUrl, code, options = {}) {
+  const payload = await qrPayload(websiteUrl, code, options);
+  return QRCode.toBuffer(payload, {
     type: 'png',
     width: 1024,
     margin: 2,
     errorCorrectionLevel: 'H',
     color: { dark: '#0f172a', light: '#ffffff' }
   });
+}
 
-  const svg = await QRCode.toString(payload, {
+async function renderSvg(websiteUrl, code, options = {}) {
+  const payload = await qrPayload(websiteUrl, code, options);
+  return QRCode.toString(payload, {
     type: 'svg',
     margin: 2,
     errorCorrectionLevel: 'H',
     color: { dark: '#0f172a', light: '#ffffff' }
   });
-  await fs.writeFile(files.svg, svg, 'utf8');
+}
 
-  return { payload, ...files };
+async function generateQrFiles(websiteUrl, code, options = {}) {
+  const payload = await qrPayload(websiteUrl, code, options);
+  try {
+    await ensureDir();
+    const files = filePaths(code);
+    const png = await renderPng(websiteUrl, code, options);
+    const svg = await renderSvg(websiteUrl, code, options);
+    await fs.writeFile(files.png, png);
+    await fs.writeFile(files.svg, svg, 'utf8');
+    return { payload, ...files };
+  } catch {
+    return { payload };
+  }
 }
 
 async function removeQrFiles(code) {
@@ -79,5 +95,7 @@ module.exports = {
   filePaths,
   generateQrFiles,
   removeQrFiles,
-  regenerateAll
+  regenerateAll,
+  renderPng,
+  renderSvg
 };

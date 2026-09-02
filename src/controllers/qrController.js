@@ -46,8 +46,8 @@ function decorate(qr, websiteUrl) {
       qr.payload_type === 'TRUST_WALLET' || qr.payload_type === 'CRYPTO_PAY'
         ? buildTrustWalletLink(qr.tw_coin_id || (qr.payload_type === 'CRYPTO_PAY' ? '195' : '60'), scanUrl)
         : null,
-    png_url: `/uploads/qr/${qr.code}.png?v=${encodeURIComponent(qr.updated_at || qr.pay_address || qr.code)}`,
-    svg_url: `/uploads/qr/${qr.code}.svg?v=${encodeURIComponent(qr.updated_at || qr.pay_address || qr.code)}`
+    png_url: `/api/qr/${qr.id}/download/png?v=${encodeURIComponent(qr.updated_at || qr.code)}`,
+    svg_url: `/api/qr/${qr.id}/download/svg?v=${encodeURIComponent(qr.updated_at || qr.code)}`
   };
 }
 
@@ -266,9 +266,27 @@ async function download(req, res, next) {
     const qr = await QrCode.findById(req.params.id);
     if (!qr) return fail(res, 'QR code not found', 404);
     const format = req.params.format === 'svg' ? 'svg' : 'png';
-    const files = qrService.filePaths(qr.code);
-    const file = format === 'svg' ? files.svg : files.png;
-    return res.download(file, `${qr.code}.${format}`);
+    const base = await websiteUrl();
+    const options = {
+      payloadType: qr.payload_type,
+      twCoinId: qr.tw_coin_id,
+      payAddress: qr.pay_address,
+      payNetwork: qr.pay_network,
+      payAmount: qr.pay_amount,
+      payToken: qr.pay_token
+    };
+    if (format === 'svg') {
+      const svg = await qrService.renderSvg(base, qr.code, options);
+      res.set('Content-Type', 'image/svg+xml');
+      res.set('Content-Disposition', `attachment; filename="${qr.code}.svg"`);
+      res.set('Cache-Control', 'no-store');
+      return res.send(svg);
+    }
+    const png = await qrService.renderPng(base, qr.code, options);
+    res.set('Content-Type', 'image/png');
+    res.set('Content-Disposition', `inline; filename="${qr.code}.png"`);
+    res.set('Cache-Control', 'no-store');
+    return res.send(png);
   } catch (error) {
     next(error);
   }
