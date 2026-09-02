@@ -65,12 +65,7 @@ async function entry(req, res, next) {
     if (!qr) return;
     await logScan(req, qr);
     noCache(res);
-    const nextUrl = nextScanPath(qr.code);
-    res.set('Refresh', `0;url=${nextUrl}`);
-    return res.status(200).render('tw-kick', {
-      title: 'Opening',
-      next: nextUrl
-    });
+    return res.redirect(302, nextScanPath(qr.code));
   } catch (error) {
     next(error);
   }

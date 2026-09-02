@@ -27,8 +27,16 @@ function createApp() {
     app.set('trust proxy', 1);
   }
 
+  app.set('etag', false);
   app.set('view engine', 'ejs');
   app.set('views', path.join(__dirname, '../views'));
+
+  app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+  });
 
   app.use(
     helmet({
@@ -52,8 +60,28 @@ function createApp() {
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
   app.use(cookieParser());
 
-  app.use('/public', express.static(path.join(__dirname, '../public')));
-  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+  app.use(
+    '/public',
+    express.static(path.join(__dirname, '../public'), {
+      etag: false,
+      lastModified: false,
+      maxAge: 0,
+      setHeaders(res) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      }
+    })
+  );
+  app.use(
+    '/uploads',
+    express.static(path.join(__dirname, '../uploads'), {
+      etag: false,
+      lastModified: false,
+      maxAge: 0,
+      setHeaders(res) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      }
+    })
+  );
 
   app.use(async (_req, res, next) => {
     try {
