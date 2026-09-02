@@ -30,6 +30,16 @@ async function logScan(req, qr) {
   }
 }
 
+function noCache(res) {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  res.removeHeader('ETag');
+  res.removeHeader('Content-Security-Policy');
+  res.removeHeader('Content-Security-Policy-Report-Only');
+}
+
 async function redirect(req, res, next) {
   try {
     const code = normalizeCode(req.params.code);
@@ -54,10 +64,7 @@ async function redirect(req, res, next) {
       await logScan(req, qr);
     }
 
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-    res.set('Pragma', 'no-cache');
-    res.removeHeader('Content-Security-Policy');
-    res.removeHeader('Content-Security-Policy-Report-Only');
+    noCache(res);
 
     if (qr.payload_type === 'CRYPTO_PAY' && qr.pay_address) {
       const sendOpts = {
@@ -72,7 +79,7 @@ async function redirect(req, res, next) {
       const inTrust = isTrustInAppBrowser(req.headers['user-agent']);
 
       if (inTrust && !warmed) {
-        const nextUrl = `/r/${encodeURIComponent(code)}?ok=1`;
+        const nextUrl = `/r/${encodeURIComponent(code)}?ok=1&t=${Date.now()}`;
         res.set('Refresh', `0;url=${nextUrl}`);
         return res.status(200).render('tw-kick', {
           title: 'Opening',
