@@ -39,7 +39,7 @@ function createApp() {
           'style-src': ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
           'font-src': ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net', 'data:'],
           'img-src': ["'self'", 'data:', 'blob:'],
-          'connect-src': ["'self'"],
+          'connect-src': ["'self'", 'https://cdn.jsdelivr.net'],
           'frame-src': ["'self'", 'trust:', 'https://link.trustwallet.com'],
           'upgrade-insecure-requests': null
         }

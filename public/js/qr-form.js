@@ -18,6 +18,24 @@ function composedDest() {
   return path ? `${base}/${path}` : base;
 }
 
+function isTronAddress(value) {
+  const addr = String(value || '').replace(/\s+/g, '');
+  return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(addr);
+}
+
+function showAddrStatus() {
+  const input = document.getElementById('pay_address');
+  const len = document.getElementById('addrLen');
+  const err = document.getElementById('addrError');
+  if (!input || !len) return;
+  const value = input.value.replace(/\s+/g, '');
+  len.textContent = `Length: ${value.length}/34`;
+  if (err) {
+    err.classList.add('d-none');
+    err.textContent = '';
+  }
+}
+
 function updateHint() {
   const code = document.getElementById('code').value.trim() || '{code}';
   const origin = window.location.origin;
@@ -40,7 +58,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('code').addEventListener('input', updateHint);
   document.getElementById('dest_base_url').addEventListener('input', updateHint);
-  document.getElementById('pay_address').addEventListener('input', updateHint);
+  document.getElementById('pay_address').addEventListener('input', () => {
+    updateHint();
+    showAddrStatus();
+  });
 
   if (id) {
     const res = await api(`/api/qr/${id}`);
@@ -79,6 +100,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       payload.pay_amount = document.getElementById('pay_amount').value;
       payload.pay_token = document.getElementById('pay_token').value;
       payload.tw_coin_id = document.getElementById('tw_coin_id').value || undefined;
+      if (!isTronAddress(payload.pay_address) && payload.pay_network === 'TRON') {
+        const err = document.getElementById('addrError');
+        if (err) {
+          err.textContent = 'Use a Tron address that starts with T and is exactly 34 characters.';
+          err.classList.remove('d-none');
+        }
+        toast('Invalid Tron wallet address');
+        return;
+      }
     } else {
       payload.dest_base_url = document.getElementById('dest_base_url').value;
       payload.dest_path = document.getElementById('dest_path').value;
@@ -94,6 +124,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = `/qr-codes/${res.data.id}`;
       }
     } catch (error) {
+      const err = document.getElementById('addrError');
+      if (err) {
+        err.textContent = error.message || 'Could not save QR';
+        err.classList.remove('d-none');
+      }
       toast(error.message || 'Could not save QR');
     }
   });
