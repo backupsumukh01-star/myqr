@@ -1,51 +1,44 @@
--- Dynamic QR Code Management System
--- MySQL 8+ schema
-
-CREATE DATABASE IF NOT EXISTS dynamic_qr
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE dynamic_qr;
+-- Dynamic QR — PostgreSQL (Render)
 
 CREATE TABLE IF NOT EXISTS admins (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id SERIAL PRIMARY KEY,
   name VARCHAR(120) NOT NULL,
-  email VARCHAR(190) NOT NULL,
+  email VARCHAR(190) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_admins_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 CREATE TABLE IF NOT EXISTS qr_codes (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  code VARCHAR(64) NOT NULL,
+  id SERIAL PRIMARY KEY,
+  code VARCHAR(64) NOT NULL UNIQUE,
   title VARCHAR(180) NOT NULL,
   description TEXT NULL,
   redirect_url VARCHAR(2048) NOT NULL,
-  payload_type ENUM('WEB', 'TRUST_WALLET', 'CRYPTO_PAY') NOT NULL DEFAULT 'WEB',
+  payload_type VARCHAR(32) NOT NULL DEFAULT 'WEB',
   tw_coin_id VARCHAR(16) NULL,
   dest_base_url VARCHAR(1024) NULL,
   dest_path VARCHAR(1024) NOT NULL DEFAULT '',
   pay_network VARCHAR(32) NULL,
   pay_address VARCHAR(256) NULL,
   pay_amount VARCHAR(64) NULL,
-  status ENUM('ACTIVE', 'DISABLED') NOT NULL DEFAULT 'ACTIVE',
-  scan_count INT UNSIGNED NOT NULL DEFAULT 0,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  last_scanned_at TIMESTAMP NULL DEFAULT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_qr_codes_code (code),
-  KEY idx_qr_status (status),
-  KEY idx_qr_scan_count (scan_count),
-  KEY idx_qr_created_at (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  pay_token VARCHAR(32) NULL,
+  status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
+  scan_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_scanned_at TIMESTAMPTZ NULL,
+  CONSTRAINT qr_codes_payload_type_chk CHECK (payload_type IN ('WEB', 'TRUST_WALLET', 'CRYPTO_PAY')),
+  CONSTRAINT qr_codes_status_chk CHECK (status IN ('ACTIVE', 'DISABLED'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_qr_status ON qr_codes (status);
+CREATE INDEX IF NOT EXISTS idx_qr_scan_count ON qr_codes (scan_count);
+CREATE INDEX IF NOT EXISTS idx_qr_created_at ON qr_codes (created_at);
 
 CREATE TABLE IF NOT EXISTS scan_logs (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  qr_code_id INT UNSIGNED NOT NULL,
+  id BIGSERIAL PRIMARY KEY,
+  qr_code_id INTEGER NOT NULL REFERENCES qr_codes (id) ON DELETE CASCADE,
   ip_address VARCHAR(45) NULL,
   country VARCHAR(100) NULL,
   city VARCHAR(120) NULL,
@@ -54,24 +47,44 @@ CREATE TABLE IF NOT EXISTS scan_logs (
   platform VARCHAR(80) NULL,
   user_agent VARCHAR(512) NULL,
   referer VARCHAR(512) NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_scan_qr (qr_code_id),
-  KEY idx_scan_created (created_at),
-  CONSTRAINT fk_scan_logs_qr
-    FOREIGN KEY (qr_code_id) REFERENCES qr_codes (id)
-    ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_scan_qr ON scan_logs (qr_code_id);
+CREATE INDEX IF NOT EXISTS idx_scan_created ON scan_logs (created_at);
 
 CREATE TABLE IF NOT EXISTS settings (
-  id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+  id SMALLINT PRIMARY KEY,
   site_name VARCHAR(180) NOT NULL DEFAULT 'Dynamic QR',
   website_url VARCHAR(512) NOT NULL DEFAULT 'http://localhost:3000',
   logo_path VARCHAR(512) NULL,
   timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 INSERT INTO settings (id, site_name, website_url, timezone)
 VALUES (1, 'Dynamic QR', 'http://localhost:3000', 'UTC')
-ON DUPLICATE KEY UPDATE id = id;
+ON CONFLICT (id) DO NOTHING;
+
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_admins_updated_at ON admins;
+CREATE TRIGGER trg_admins_updated_at
+  BEFORE UPDATE ON admins
+  FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_qr_codes_updated_at ON qr_codes;
+CREATE TRIGGER trg_qr_codes_updated_at
+  BEFORE UPDATE ON qr_codes
+  FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_settings_updated_at ON settings;
+CREATE TRIGGER trg_settings_updated_at
+  BEFORE UPDATE ON settings
+  FOR EACH ROW EXECUTE PROCEDURE set_updated_at();

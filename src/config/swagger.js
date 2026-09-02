@@ -10,7 +10,7 @@ const spec = swaggerJsdoc({
       title: 'Dynamic QR Management API',
       version: '1.0.0',
       description:
-        'REST API for creating stable QR codes that always encode `{website}/r/{code}`. Destination URLs are resolved at scan time from MySQL.'
+        'REST API for creating stable QR codes that always encode `{website}/r/{code}`. Destination URLs are resolved at scan time from PostgreSQL.'
     },
     servers: [{ url: env.appBaseUrl }],
     components: {

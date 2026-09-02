@@ -2,52 +2,39 @@
 
 const fs = require('fs');
 const path = require('path');
-const mysql = require('mysql2/promise');
 const env = require('../config/env');
 const logger = require('../utils/logger');
 const { logDbConnectionError } = require('../helpers/dbErrors');
+const { pool } = require('../config/db');
 
 async function migrate() {
   const sqlPath = path.join(__dirname, '../../database/schema.sql');
   const sql = fs.readFileSync(sqlPath, 'utf8');
+  await pool.query(sql);
 
-  const connection = await mysql.createConnection({
-    host: env.db.host,
-    port: env.db.port,
-    user: env.db.user,
-    password: env.db.password,
-    multipleStatements: true
-  });
-
-  await connection.query(sql);
-
-  const alters = [
-    "ALTER TABLE dynamic_qr.qr_codes MODIFY COLUMN payload_type ENUM('WEB', 'TRUST_WALLET', 'CRYPTO_PAY') NOT NULL DEFAULT 'WEB'",
-    'ALTER TABLE dynamic_qr.qr_codes ADD COLUMN tw_coin_id VARCHAR(16) NULL',
-    'ALTER TABLE dynamic_qr.qr_codes ADD COLUMN dest_base_url VARCHAR(1024) NULL',
-    "ALTER TABLE dynamic_qr.qr_codes ADD COLUMN dest_path VARCHAR(1024) NOT NULL DEFAULT ''",
-    'ALTER TABLE dynamic_qr.qr_codes ADD COLUMN pay_network VARCHAR(32) NULL',
-    'ALTER TABLE dynamic_qr.qr_codes ADD COLUMN pay_address VARCHAR(256) NULL',
-    'ALTER TABLE dynamic_qr.qr_codes ADD COLUMN pay_amount VARCHAR(64) NULL',
-    "ALTER TABLE dynamic_qr.qr_codes ADD COLUMN pay_token VARCHAR(32) NULL"
+  const extras = [
+    'ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS tw_coin_id VARCHAR(16) NULL',
+    'ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS dest_base_url VARCHAR(1024) NULL',
+    "ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS dest_path VARCHAR(1024) NOT NULL DEFAULT ''",
+    'ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS pay_network VARCHAR(32) NULL',
+    'ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS pay_address VARCHAR(256) NULL',
+    'ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS pay_amount VARCHAR(64) NULL',
+    'ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS pay_token VARCHAR(32) NULL'
   ];
-  for (const statement of alters) {
-    try {
-      await connection.query(statement);
-    } catch (error) {
-      if (error.errno !== 1060) throw error;
-    }
+  for (const statement of extras) {
+    await pool.query(statement);
   }
 
-  await connection.end();
-  logger.info('Database schema applied');
+  logger.info(`PostgreSQL schema applied (${env.db.url ? 'DATABASE_URL' : env.db.host})`);
 }
 
 if (require.main === module) {
-  migrate().catch((error) => {
-    logDbConnectionError(logger, error);
-    process.exit(1);
-  });
+  migrate()
+    .then(() => pool.end())
+    .catch((error) => {
+      logDbConnectionError(logger, error);
+      process.exit(1);
+    });
 }
 
 module.exports = migrate;

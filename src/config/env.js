@@ -13,17 +13,28 @@ function required(name, fallback) {
   return value;
 }
 
+const databaseUrl = process.env.DATABASE_URL || '';
+const sslEnv = String(process.env.DB_SSL || '').toLowerCase();
+const ssl =
+  sslEnv === 'true' || sslEnv === '1'
+    ? true
+    : sslEnv === 'false' || sslEnv === '0'
+      ? false
+      : Boolean(databaseUrl) || process.env.NODE_ENV === 'production';
+
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 3000),
   appBaseUrl: (process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/+$/, ''),
   trustProxy: String(process.env.TRUST_PROXY || 'false') === 'true',
   db: {
-    host: required('DB_HOST', 'localhost'),
-    port: Number(process.env.DB_PORT || 3306),
-    user: required('DB_USER', 'root'),
+    url: databaseUrl,
+    host: process.env.DB_HOST || 'localhost',
+    port: Number(process.env.DB_PORT || 5432),
+    user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || '',
-    database: required('DB_NAME', 'dynamic_qr')
+    database: process.env.DB_NAME || 'dynamic_qr',
+    ssl
   },
   jwt: {
     secret: required('JWT_SECRET', 'dev_only_change_me'),

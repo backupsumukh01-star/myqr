@@ -2,6 +2,10 @@
 
 const { query } = require('../config/db');
 
+function num(value) {
+  return Number(value || 0);
+}
+
 const Admin = {
   async findByEmail(email) {
     const rows = await query('SELECT * FROM admins WHERE email = ? LIMIT 1', [email]);
@@ -17,16 +21,16 @@ const Admin = {
   },
 
   async create({ name, email, password }) {
-    const result = await query(
-      'INSERT INTO admins (name, email, password) VALUES (?, ?, ?)',
+    const rows = await query(
+      'INSERT INTO admins (name, email, password) VALUES (?, ?, ?) RETURNING id',
       [name, email, password]
     );
-    return result.insertId;
+    return rows[0].id;
   },
 
   async count() {
     const rows = await query('SELECT COUNT(*) AS total FROM admins');
-    return rows[0].total;
+    return num(rows[0].total);
   }
 };
 

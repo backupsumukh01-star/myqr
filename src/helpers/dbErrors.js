@@ -3,10 +3,8 @@
 function logDbConnectionError(logger, error) {
   if (error && (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT')) {
     logger.error(
-      'Cannot reach MySQL/MariaDB on the configured host/port. ' +
-        'Nothing is listening on 3306. Start the database, then run npm run migrate again.\n' +
-        'Windows (this project): npm run db:start\n' +
-        'If MariaDB is installed: start the MariaDB service, or run mysqld.exe from Program Files\\MariaDB *\\bin'
+      'Cannot reach PostgreSQL. On Render, link a Postgres database and set DATABASE_URL. ' +
+        'Locally, run Postgres on port 5432 (or set DATABASE_URL).'
     );
   }
   logger.error(error);

@@ -4,11 +4,10 @@
   "description": "Production-ready Dynamic QR Code Management System. QR images encode a stable short URL; destinations are resolved at scan time.",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node src/database/migrate.js && node src/database/seed.js && node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node src/database/seed.js",
-    "migrate": "node src/database/migrate.js",
-    "db:start": "scripts\\start-mariadb.cmd"
+    "migrate": "node src/database/migrate.js"
   },
   "engines": {
     "node": ">=18"
@@ -16,7 +15,7 @@
   "keywords": [
     "dynamic-qr",
     "express",
-    "mysql",
+    "postgres",
     "jwt"
   ],
   "license": "MIT",
@@ -34,7 +33,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "mysql2": "^3.12.0",
+    "pg": "^8.23.0",
     "qrcode": "^1.5.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",

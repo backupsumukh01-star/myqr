@@ -1,17 +1,17 @@
 services:
   db:
-    image: mysql:8.4
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpass}
-      MYSQL_DATABASE: ${DB_NAME:-dynamic_qr}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-rootpass}
+      POSTGRES_DB: ${DB_NAME:-dynamic_qr}
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_PASSWORD:-rootpass}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-dynamic_qr}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -30,10 +30,11 @@ services:
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
       TRUST_PROXY: "true"
       DB_HOST: db
-      DB_PORT: 3306
-      DB_USER: root
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-rootpass}
       DB_NAME: ${DB_NAME:-dynamic_qr}
+      DB_SSL: "false"
       JWT_SECRET: ${JWT_SECRET:-change_this_to_a_long_random_secret}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
       COOKIE_NAME: ${COOKIE_NAME:-dqr_token}
@@ -48,5 +49,5 @@ services:
       - uploads_data:/app/uploads
 
 volumes:
-  mysql_data:
+  pg_data:
   uploads_data:

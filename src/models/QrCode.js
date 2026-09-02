@@ -9,6 +9,10 @@ const SORT_MAP = {
   title: 'title ASC'
 };
 
+function num(value) {
+  return Number(value || 0);
+}
+
 const QrCode = {
   async create({
     code,
@@ -25,11 +29,12 @@ const QrCode = {
     payAmount = null,
     payToken = null
   }) {
-    const result = await query(
+    const rows = await query(
       `INSERT INTO qr_codes (
          code, title, description, redirect_url, status, payload_type, tw_coin_id,
          dest_base_url, dest_path, pay_network, pay_address, pay_amount, pay_token
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       RETURNING id`,
       [
         code,
         title,
@@ -46,7 +51,7 @@ const QrCode = {
         payToken
       ]
     );
-    return this.findById(result.insertId);
+    return this.findById(rows[0].id);
   },
 
   async findById(id) {
@@ -96,7 +101,7 @@ const QrCode = {
     const params = [];
 
     if (search) {
-      where.push('(code LIKE ? OR title LIKE ? OR redirect_url LIKE ?)');
+      where.push('(code ILIKE ? OR title ILIKE ? OR redirect_url ILIKE ?)');
       const like = `%${search}%`;
       params.push(like, like, like);
     }
@@ -113,17 +118,18 @@ const QrCode = {
       `SELECT COUNT(*) AS total FROM qr_codes ${whereSql}`,
       params
     );
+    const total = num(countRows[0].total);
     const rows = await query(
       `SELECT * FROM qr_codes ${whereSql} ORDER BY ${orderSql} LIMIT ? OFFSET ?`,
-      [...params, limit, offset]
+      [...params, Number(limit), Number(offset)]
     );
 
     return {
       items: rows,
-      total: countRows[0].total,
+      total,
       page,
       limit,
-      pages: Math.max(1, Math.ceil(countRows[0].total / limit))
+      pages: Math.max(1, Math.ceil(total / limit))
     };
   },
 
@@ -131,12 +137,18 @@ const QrCode = {
     const rows = await query(`
       SELECT
         COUNT(*) AS total,
-        SUM(status = 'ACTIVE') AS active,
-        SUM(status = 'DISABLED') AS disabled,
+        COUNT(*) FILTER (WHERE status = 'ACTIVE') AS active,
+        COUNT(*) FILTER (WHERE status = 'DISABLED') AS disabled,
         COALESCE(SUM(scan_count), 0) AS scans
       FROM qr_codes
     `);
-    return rows[0];
+    const row = rows[0] || {};
+    return {
+      total: num(row.total),
+      active: num(row.active),
+      disabled: num(row.disabled),
+      scans: num(row.scans)
+    };
   },
 
   async top(limit = 10) {
@@ -145,7 +157,7 @@ const QrCode = {
        FROM qr_codes
        ORDER BY scan_count DESC, id DESC
        LIMIT ?`,
-      [limit]
+      [Number(limit)]
     );
   },
 
@@ -153,7 +165,7 @@ const QrCode = {
     await withTransaction(async (connection) => {
       await connection.query(
         `UPDATE qr_codes
-         SET scan_count = scan_count + 1, last_scanned_at = UTC_TIMESTAMP()
+         SET scan_count = scan_count + 1, last_scanned_at = NOW()
          WHERE id = ?`,
         [id]
       );

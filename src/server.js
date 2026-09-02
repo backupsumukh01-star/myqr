@@ -13,7 +13,7 @@ async function start() {
   await fs.mkdir(path.join(__dirname, '../uploads/qr'), { recursive: true });
   await fs.mkdir(path.join(__dirname, '../uploads/logo'), { recursive: true });
   await ping();
-  logger.info(`MySQL connected (${env.db.host}/${env.db.database})`);
+  logger.info(`PostgreSQL connected`);
   await seed();
 
   const app = createApp();

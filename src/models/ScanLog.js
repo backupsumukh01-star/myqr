@@ -2,12 +2,17 @@
 
 const { query } = require('../config/db');
 
+function num(value) {
+  return Number(value || 0);
+}
+
 const ScanLog = {
   async create(entry) {
-    const result = await query(
+    const rows = await query(
       `INSERT INTO scan_logs
         (qr_code_id, ip_address, country, city, device, browser, platform, user_agent, referer)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       RETURNING id`,
       [
         entry.qrCodeId,
         entry.ipAddress || null,
@@ -20,7 +25,7 @@ const ScanLog = {
         entry.referer || null
       ]
     );
-    return result.insertId;
+    return rows[0].id;
   },
 
   async list({ search, page, limit, qrId }) {
@@ -32,7 +37,9 @@ const ScanLog = {
       params.push(qrId);
     }
     if (search) {
-      where.push('(q.code LIKE ? OR q.title LIKE ? OR s.ip_address LIKE ? OR s.country LIKE ? OR s.browser LIKE ?)');
+      where.push(
+        '(q.code ILIKE ? OR q.title ILIKE ? OR s.ip_address ILIKE ? OR s.country ILIKE ? OR s.browser ILIKE ?)'
+      );
       const like = `%${search}%`;
       params.push(like, like, like, like, like);
     }
@@ -47,6 +54,7 @@ const ScanLog = {
        ${whereSql}`,
       params
     );
+    const total = num(countRows[0].total);
 
     const rows = await query(
       `SELECT
@@ -58,15 +66,15 @@ const ScanLog = {
        ${whereSql}
        ORDER BY s.created_at DESC
        LIMIT ? OFFSET ?`,
-      [...params, limit, offset]
+      [...params, Number(limit), Number(offset)]
     );
 
     return {
       items: rows,
-      total: countRows[0].total,
+      total,
       page,
       limit,
-      pages: Math.max(1, Math.ceil(countRows[0].total / limit))
+      pages: Math.max(1, Math.ceil(total / limit))
     };
   },
 
@@ -77,7 +85,7 @@ const ScanLog = {
        INNER JOIN qr_codes q ON q.id = s.qr_code_id
        ORDER BY s.created_at DESC
        LIMIT ?`,
-      [limit]
+      [Number(limit)]
     );
   },
 
@@ -85,39 +93,39 @@ const ScanLog = {
     const rows = await query(
       `SELECT COUNT(*) AS total
        FROM scan_logs
-       WHERE created_at >= UTC_DATE()`
+       WHERE created_at >= DATE_TRUNC('day', NOW())`
     );
-    return rows[0].total;
+    return num(rows[0].total);
   },
 
   async monthCount() {
     const rows = await query(
       `SELECT COUNT(*) AS total
        FROM scan_logs
-       WHERE created_at >= DATE_FORMAT(UTC_TIMESTAMP(), '%Y-%m-01')`
+       WHERE created_at >= DATE_TRUNC('month', NOW())`
     );
-    return rows[0].total;
+    return num(rows[0].total);
   },
 
   async dailySeries(days = 14) {
     return query(
-      `SELECT DATE(created_at) AS day, COUNT(*) AS total
+      `SELECT to_char(created_at::date, 'YYYY-MM-DD') AS day, COUNT(*)::int AS total
        FROM scan_logs
-       WHERE created_at >= DATE_SUB(UTC_DATE(), INTERVAL ? DAY)
-       GROUP BY DATE(created_at)
+       WHERE created_at >= (CURRENT_DATE - (? || ' days')::interval)
+       GROUP BY created_at::date
        ORDER BY day ASC`,
-      [days]
+      [String(days)]
     );
   },
 
   async monthlySeries(months = 12) {
     return query(
-      `SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS total
+      `SELECT to_char(date_trunc('month', created_at), 'YYYY-MM') AS month, COUNT(*)::int AS total
        FROM scan_logs
-       WHERE created_at >= DATE_SUB(UTC_DATE(), INTERVAL ? MONTH)
-       GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+       WHERE created_at >= (CURRENT_DATE - (? || ' months')::interval)
+       GROUP BY date_trunc('month', created_at)
        ORDER BY month ASC`,
-      [months]
+      [String(months)]
     );
   }
 };

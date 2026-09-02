@@ -1,6 +1,6 @@
 # Dynamic QR Code Management System
 
-Production-ready Node.js + Express + MySQL app that prints **stable** QR codes.
+Production-ready Node.js + Express + PostgreSQL app that prints **stable** QR codes.
 
 A QR never contains the destination site. It only contains your domain and a short code:
 
@@ -8,12 +8,12 @@ A QR never contains the destination site. It only contains your domain and a sho
 https://mydomain.com/r/abc1
 ```
 
-On scan, `GET /r/abc1` looks up the latest `redirect_url` in MySQL and issues an HTTP 302. Change the destination in the admin dashboard; the printed QR stays the same.
+On scan, `GET /r/abc1` looks up the latest `redirect_url` in PostgreSQL and issues an HTTP 302. Change the destination in the admin dashboard; the printed QR stays the same.
 
 ## Stack
 
 - Node.js, Express, EJS, Bootstrap 5, vanilla JavaScript
-- MySQL 8
+- PostgreSQL
 - JWT (httpOnly cookie + Bearer)
 - bcrypt (via bcryptjs)
 - `qrcode` for PNG + SVG
@@ -23,23 +23,28 @@ On scan, `GET /r/abc1` looks up the latest `redirect_url` in MySQL and issues an
 
 ## Quick start (local)
 
-MySQL/MariaDB must be running on port **3306** before migrate/seed/dev. `ECONNREFUSED` means nothing is listening there.
+PostgreSQL must be running (local port **5432**, or `DATABASE_URL` on Render) before migrate/seed/dev.
 
-On this Windows setup MariaDB 12.3 is installed at `C:\Program Files\MariaDB 12.3\`. Start it with:
+## Render
 
-```bash
-npm run db:start
-```
+1. New → **Postgres** (wait until it is running).
+2. New → **Web Service** from `backupsumukh01-star/myqr` (not Static Site).
+3. Build: `npm install`. Start: `npm start`.
+4. Env vars:
+   - `DATABASE_URL` = Internal Database URL from the Postgres service
+   - `DB_SSL` = `true`
+   - `TRUST_PROXY` = `true`
+   - `JWT_SECRET` = a long random string
+   - `APP_BASE_URL` = `https://YOUR-SERVICE.onrender.com`
+5. After the first deploy, open that HTTPS URL, sign in, set Website URL to the same HTTPS address, download QR PNGs.
 
-1. Create a MySQL server and copy environment config:
+On Render, `npm start` runs migrate + seed + the server.
+
+## Quick start (local)
 
 ```bash
 cp .env.example .env
 ```
-
-Set `DB_PASSWORD`, `JWT_SECRET`, and `APP_BASE_URL` (the public origin encoded into every QR).
-
-2. Install and migrate:
 
 ```bash
 npm install
@@ -63,11 +68,7 @@ Change these immediately in production.
 docker compose up --build
 ```
 
-The app container applies `database/schema.sql` on first MySQL boot. Then:
-
-```bash
-docker compose exec app npm run seed
-```
+The app container runs migrate and seed on start.
 
 ## How a scan works
 
@@ -102,7 +103,7 @@ docs/
 ## Security
 
 - Helmet, CORS, login + API rate limits
-- Parameterized SQL (mysql2) — no string-concatenated queries
+- Parameterized SQL (`pg`) — no string-concatenated queries
 - express-validator + input sanitization
 - Secrets in `.env`
 - Short codes are unique; duplicate creates are rejected

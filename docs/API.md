@@ -20,7 +20,7 @@ Protected routes accept `Authorization: Bearer <token>` or the session cookie.
 ## QR codes
 
 QR images **always** encode `{website_url}/r/{code}`.  
-`redirect_url` is stored in MySQL and resolved on scan. Updating it does **not** change the QR image.
+`redirect_url` is stored in PostgreSQL and resolved on scan. Updating it does **not** change the QR image.
 
 | Method | Path | Notes |
 | --- | --- | --- |
