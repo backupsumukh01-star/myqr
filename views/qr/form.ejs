@@ -48,7 +48,8 @@
             </div>
             <div class="col-12 pay-only">
               <label class="form-label" for="pay_address">Wallet address</label>
-              <input id="pay_address" class="form-control" required placeholder="TGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+              <input id="pay_address" class="form-control" required maxlength="2048" spellcheck="false" placeholder="TGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+              <div class="form-text">Must start with <strong>T</strong> and be 34 characters. Copy from Trust Wallet → USDT (TRC20) → Receive.</div>
             </div>
             <div class="col-md-6 pay-only">
               <label class="form-label" for="pay_amount">Amount (optional)</label>

@@ -11,7 +11,9 @@ function notFound(req, res, next) {
 }
 
 function errorHandler(err, req, res, _next) {
-  logger.error(err.message, err.stack);
+  const status = err.status || 500;
+  if (status >= 500) logger.error(err.message, err.stack);
+  else logger.warn(err.message);
 
   if (err.code === 'ER_DUP_ENTRY') {
     return fail(res, 'Duplicate value. That short code already exists.', 409);
@@ -20,7 +22,6 @@ function errorHandler(err, req, res, _next) {
     return fail(res, 'File is too large', 413);
   }
 
-  const status = err.status || 500;
   const message =
     status === 500 && process.env.NODE_ENV === 'production'
       ? 'Internal server error'

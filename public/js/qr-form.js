@@ -84,13 +84,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       payload.dest_path = document.getElementById('dest_path').value;
       if (type === 'TRUST_WALLET') payload.tw_coin_id = document.getElementById('tw_coin_id').value;
     }
-    if (id) {
-      await api(`/api/qr/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
-      toast('Wallet saved. Printed QR is unchanged. Next scan uses the new address.');
-      window.location.href = `/qr-codes/${id}`;
-    } else {
-      const res = await api('/api/qr', { method: 'POST', body: JSON.stringify(payload) });
-      window.location.href = `/qr-codes/${res.data.id}`;
+    try {
+      if (id) {
+        await api(`/api/qr/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        toast('Wallet saved. Printed QR is unchanged. Next scan uses the new address.');
+        window.location.href = `/qr-codes/${id}`;
+      } else {
+        const res = await api('/api/qr', { method: 'POST', body: JSON.stringify(payload) });
+        window.location.href = `/qr-codes/${res.data.id}`;
+      }
+    } catch (error) {
+      toast(error.message || 'Could not save QR');
     }
   });
 });

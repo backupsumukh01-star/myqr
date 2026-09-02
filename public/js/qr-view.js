@@ -88,8 +88,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         dest_base_url: document.getElementById('liveBase').value,
         dest_path: document.getElementById('livePath').value
       };
-    await api(`/api/qr/${qr.id}`, { method: 'PUT', body: JSON.stringify(body) });
-    toast(isPay ? 'Wallet saved. Same printed QR.' : 'Saved.');
-    window.location.reload();
+    try {
+      await api(`/api/qr/${qr.id}`, { method: 'PUT', body: JSON.stringify(body) });
+      toast(isPay ? 'Wallet saved. Same printed QR.' : 'Saved.');
+      window.location.reload();
+    } catch (error) {
+      toast(error.message || 'Could not save');
+    }
   });
 });

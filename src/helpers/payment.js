@@ -34,13 +34,20 @@ function buildAssetId({ network, token, coinId }) {
 }
 
 function normalizePayAddress(network, address) {
-  let addr = String(address || '').trim();
+  let addr = String(address || '').replace(/\s+/g, '').trim();
+  try {
+    const parsed = new URL(addr);
+    const fromQuery = parsed.searchParams.get('address');
+    if (fromQuery) addr = fromQuery.replace(/\s+/g, '').trim();
+  } catch {
+    /* not a URL */
+  }
   const net = String(network || 'TRON').toUpperCase();
   if (net === 'TRON') {
     if (addr.startsWith('t') && addr.length === 34) addr = `T${addr.slice(1)}`;
     if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(addr)) {
       const error = new Error(
-        'Tron address must be 34 characters and start with T (example TQxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx).'
+        'Pay-to wallet must be a Tron address: 34 characters, starting with T. Copy it from Trust Wallet → Receive (USDT TRC20).'
       );
       error.status = 422;
       throw error;
