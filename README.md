@@ -53,7 +53,7 @@ npm run seed
 npm run dev
 ```
 
-3. Open [http://localhost:3000/login](http://localhost:3000/login)
+Open [http://localhost:3000/login](http://localhost:3000/login)
 
 Default admin (from `.env`):
 

@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   syncTypeUi();
   updateHint();
+  showAddrStatus();
 
   document.getElementById('qrForm').addEventListener('submit', async (event) => {
     event.preventDefault();
